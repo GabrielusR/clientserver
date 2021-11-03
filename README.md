@@ -1,3 +1,4 @@
 # clientserver
 
-A TCP client and server using "HELLO-OK" protocol, that can handle multiple clients.
+A TCP client and server which uses a "HELLO-OK" protocol.
+The server can handle multiple clients using I/O multiplexing.
