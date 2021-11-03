@@ -5,7 +5,6 @@
 CLIDIR=client
 SRVDIR=server
 
-
 clientserver: server client
 
 server:	$(SRVDIR)/server.o $(SRVDIR)/main.o 
