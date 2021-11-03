@@ -33,17 +33,23 @@ int initServer()
 		return -1;
 	}
 	
+	int ret = -1;
+	int opt = 1;
+	
+	if ( ( ret = setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt) ) ) < 0 ){
+		printf("Erro - setsockopt: %d\n", ret);
+		return -1;
+	}
+	
 	// Address binded
 	struct sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(PORT);
-	inet_pton(AF_INET, "localhost", &serverAddr.sin_addr );
+	inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr );
 	
 	// Socket binding
-	int ret = -1;
-
 	if ( ( ret = bind( sockfd, (addr*)&serverAddr, sizeof(serverAddr) ) ) < 0 ){
-		printf("Erro - Bind: %d\n", ret);
+		printf("Erro - Bind: %d\n", errno);
 		return -1;
 	}
 
