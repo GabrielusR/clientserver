@@ -38,7 +38,7 @@ int initConnection()
 		char buffer[MAX_MSG];
 		memset( buffer, '\0', sizeof(buffer) );
 	
-		strcpy(buffer, "HELLO\n");
+		strcpy(buffer, "HELLO");
 		write(sockfd, buffer, MAX_MSG);
 
 		memset( buffer, '\0', sizeof(buffer) );
@@ -66,7 +66,11 @@ void connIO(int conn)
 		fgets(buffer, MAX_MSG, stdin);
 	
 		if ( strncmp(buffer, "EXIT", 4) == 0 ){
+			strcpy(buffer, "EXIT");
+			write(conn, buffer, MAX_MSG);
+			
 			puts("Closing connection.");
+			
 			return;
 		}
 

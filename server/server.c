@@ -17,6 +17,10 @@ const int PORT = 8080;
 
 typedef struct sockaddr addr;
 
+//connections fd array
+int connfds[10];	
+
+//connections addr array
 struct sockaddr_in activeConns[10];
 
 int initServer()
@@ -57,16 +61,14 @@ int isConnected( struct sockaddr_in connAddr )
 	int i = 0;
 
 	for (i = 0; i < MAX_CONN; i++)
-		if (connAddr.sin_addr.s_addr == activeConns[i].sin_addr.s_addr){
+		if (connAddr.sin_addr.s_addr == activeConns[i].sin_addr.s_addr)
 			return 1;
-		}
+			
 	return 0;
 }
 
 void acceptConnections(int sockfd)
 {	
-	//connections fd array
-	int connfds[MAX_CONN];	
 	memset( connfds, 0, sizeof(connfds) );
 
 	//polled fds
@@ -97,7 +99,7 @@ void acceptConnections(int sockfd)
 			if ( connfds[i] > maxFd )
 				maxFd = connfds[i];
 		}
-		
+
 		int activity = select(maxFd+1, &fds, NULL, NULL, NULL);
 
 		if ( (activity < 0) && (errno == EINTR) )
@@ -122,14 +124,10 @@ void acceptConnections(int sockfd)
 			
 						for (i = 0; i < MAX_CONN; i++){
 							if( connfds[i] == 0 ){
+								
 								connfds[i] = conn;
-								break;
-							}
-						}
-							
-						for (i = 0; i < MAX_CONN; i++){
-							if( connfds[i] == conn ){
 								activeConns[i] = connAddr;
+								
 								break;
 							}
 						}
@@ -149,9 +147,8 @@ void acceptConnections(int sockfd)
 
 		// checks activity for other connections
 		for (i = 0; i < MAX_CONN; i++){
-			if ( FD_ISSET(connfds[i], &fds) ){
+			if ( FD_ISSET(connfds[i], &fds) )
 				connIO(connfds[i]);
-			}
 		}		
 
 	} //while (1)	
@@ -162,6 +159,18 @@ void connIO(int conn)
 	char buffer[MAX_MSG];
 
 	read(conn, buffer, MAX_MSG);
+	
+	int i = 0;
+	
+	if ( strncmp(buffer, "EXIT", 4) == 0){
+		for (i; i < MAX_CONN; i++){
+			if (connfds[i] == conn){
+					connfds[i] = 0;
+					activeConns[i].sin_addr.s_addr = 0;
+					return;
+			}	
+		}
+	}
 	
 	write(conn, buffer, MAX_MSG);
 }
