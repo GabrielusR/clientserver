@@ -21,6 +21,8 @@ typedef struct sockaddr addr;
 //connections fd array
 int connfds[3];	
 
+int numConns;
+
 //connections addr array
 struct sockaddr_in activeConns[3];
 
@@ -88,7 +90,6 @@ void acceptConnections(int sockfd)
 	int len = sizeof(connAddr);
 
 	char buffer[MAX_MSG];
-	int numConns = 0;
 
 	//check for connections/activity
 	while (1){
@@ -185,6 +186,7 @@ void connIO(int conn)
 		for (i; i < MAX_CONN; i++){
 			if (connfds[i] == conn){
 					close(conn);
+					numConns -= 1;
 					connfds[i] = 0;
 					activeConns[i].sin_addr.s_addr = 0;
 					return;
