@@ -2,11 +2,16 @@
 
 #include "client.h"
 
-int main()
+int main(int argc, char *argv[])
 {
 	int sockfd = -1;
 
-	if ( ( sockfd = initConnection() ) < 0 ){
+	if ( !argv[1] ){
+		puts("Inform the remote server address.\n");
+		return -1;
+	}
+
+	if ( ( sockfd = initConnection( argv[1] ) ) < 0 ){
 		close(sockfd);
 		return -1;		
 	}

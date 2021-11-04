@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include <time.h>
 #include <errno.h>
 
@@ -11,17 +12,17 @@
 
 #include "server.h"
 
-const int MAX_CONN = 10;
+const int MAX_CONN = 3;
 const int MAX_MSG = 50;
 const int PORT = 8080;
 
 typedef struct sockaddr addr;
 
 //connections fd array
-int connfds[10];	
+int connfds[3];	
 
 //connections addr array
-struct sockaddr_in activeConns[10];
+struct sockaddr_in activeConns[3];
 
 int initServer()
 {
@@ -45,7 +46,7 @@ int initServer()
 	struct sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(PORT);
-	inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr );
+	inet_pton(AF_INET, "10.0.0.105", &serverAddr.sin_addr );
 	
 	// Socket binding
 	if ( ( ret = bind( sockfd, (addr*)&serverAddr, sizeof(serverAddr) ) ) < 0 ){
@@ -68,7 +69,7 @@ int isConnected( struct sockaddr_in connAddr )
 
 	for (i = 0; i < MAX_CONN; i++)
 		if (connAddr.sin_addr.s_addr == activeConns[i].sin_addr.s_addr)
-			return 1;
+			return 0;//return 1;
 			
 	return 0;
 }
@@ -86,7 +87,8 @@ void acceptConnections(int sockfd)
 	struct sockaddr_in connAddr;
 	int len = sizeof(connAddr);
 
-	char buffer[MAX_MSG];	
+	char buffer[MAX_MSG];
+	int numConns = 0;
 
 	//check for connections/activity
 	while (1){
@@ -117,7 +119,7 @@ void acceptConnections(int sockfd)
 				printf("Erro - Accept: %d\n", conn);
 			}
 			else {
-				if ( !isConnected(connAddr) ){
+				if ( !isConnected(connAddr) && (numConns < MAX_CONN) ){
 					read(conn, buffer, MAX_MSG);
 				
 					if ( strncmp(buffer, "HELLO", 5) == 0 ){
@@ -131,6 +133,7 @@ void acceptConnections(int sockfd)
 						for (i = 0; i < MAX_CONN; i++){
 							if( connfds[i] == 0 ){
 								
+								numConns += 1;		
 								connfds[i] = conn;
 								activeConns[i] = connAddr;
 								
@@ -144,7 +147,7 @@ void acceptConnections(int sockfd)
 					}
 				}
 				else {
-					strcpy(buffer, "Client already connected.\n");
+					strcpy(buffer, "Client connected or maximum connections achieved.\n");
 					write(conn, buffer, MAX_MSG);
 					close(conn);
 				}
@@ -164,13 +167,24 @@ void connIO(int conn)
 {
 	char buffer[MAX_MSG];
 
+	memset( buffer, '\0', sizeof(buffer) );
+
 	read(conn, buffer, MAX_MSG);
+	
+	if ( strncmp(buffer, "DATE", 4) == 0 ){
+		memset( buffer, '\0', sizeof(buffer) );
+
+		time_t now = time(NULL);
+		
+		strcpy( buffer, asctime( localtime(&now) )  );			
+	}
 	
 	int i = 0;
 	
 	if ( strncmp(buffer, "EXIT", 4) == 0){
 		for (i; i < MAX_CONN; i++){
 			if (connfds[i] == conn){
+					close(conn);
 					connfds[i] = 0;
 					activeConns[i].sin_addr.s_addr = 0;
 					return;

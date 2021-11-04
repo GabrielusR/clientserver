@@ -10,7 +10,7 @@ const int MAX_MSG = 50;
 const int PORT = 8080;
 typedef struct sockaddr addr;
 
-int initConnection()
+int initConnection( char * srvaddr )
 {
 	// Socket creation
 	int sockfd = -1;
@@ -24,7 +24,7 @@ int initConnection()
 	struct sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(PORT);
-	inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+	inet_pton(AF_INET, srvaddr, &serverAddr.sin_addr);
 
 	// Socket connection
 	int ret = -1;
